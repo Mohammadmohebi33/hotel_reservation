@@ -7,6 +7,24 @@ use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
+
+    public function all()
+    {
+        $user = auth()->user();
+
+        if ($user->isAdmin()) {
+            $bookings = Booking::with('room', 'user')->get();
+        } else {
+            $bookings = Booking::with('room', 'user')->where('user_id', $user->id)->get();
+        }
+
+        return response()->json([
+            'message' => 'Bookings retrieved successfully',
+            'bookings' => $bookings,
+        ], 200);
+    }
+
+
     public function storeBooking(Request $request)
     {
         $request->validate([
@@ -49,6 +67,11 @@ class BookingController extends Controller
     public function cancelBooking($bookingId)
     {
         $booking = Booking::find($bookingId);
+
+
+        if ($booking->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
         if (!$booking) {
             return response()->json(['message' => 'Booking not found'], 404);

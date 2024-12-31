@@ -40,4 +40,5 @@ Route::prefix('rooms')->middleware("auth:api")->group(function () {
 });
 
 Route::post('/booking', [BookingController::class, 'storeBooking'])->middleware("auth:api");
-Route::patch('/booking/{id}/cancel', [BookingController::class, 'cancelBooking']);
+Route::patch('/booking/{id}/cancel', [BookingController::class, 'cancelBooking'])->middleware("admin_or_owner");
+Route::get("/booking/all" , [BookingController::class, "all"]);
