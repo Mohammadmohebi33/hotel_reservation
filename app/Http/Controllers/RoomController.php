@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class RoomController extends Controller
 {
-    public function all()
+    public function index()
     {
         return Room::all();
     }

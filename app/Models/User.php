@@ -44,7 +44,7 @@ class User extends Authenticatable implements JWTSubject
         'password' => 'hashed',
     ];
 
-     // متدهای JWTSubject
+
      public function getJWTIdentifier()
      {
          return $this->getKey();

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 class BookingController extends Controller
 {
 
-    public function all()
+    public function index()
     {
         $user = auth()->user();
 
