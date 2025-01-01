@@ -3,21 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBookingRequest;
-use App\Models\Booking;
-use Illuminate\Http\Request;
+use App\Repositories\BookingRepositoryInterface;
 
 class BookingController extends Controller
 {
 
+    protected $bookingRepository;
+
+    public function __construct(BookingRepositoryInterface $bookingRepository)
+    {
+        $this->bookingRepository = $bookingRepository;
+    }
+
     public function index()
     {
         $user = auth()->user();
-
-        if ($user->isAdmin()) {
-            $bookings = Booking::with('room', 'user')->get();
-        } else {
-            $bookings = Booking::with('room', 'user')->where('user_id', $user->id)->get();
-        }
+        $bookings = $this->bookingRepository->getAllBookings($user);
 
         return response()->json([
             'message' => 'Bookings retrieved successfully',
@@ -28,25 +29,19 @@ class BookingController extends Controller
 
     public function storeBooking(StoreBookingRequest $request)
     {
+        $data = [
+            'room_id' => $request->room_id,
+            'from_date' => $request->from_date,
+            'till_date' => $request->till_date,
+        ];
 
-        $conflictingBookings = Booking::where('room_id', $request->room_id)
-            ->where('canceled', false)
-            ->where(function ($query) use ($request) {
-                $query->whereBetween('from_date', [$request->from_date, $request->till_date])
-                    ->orWhereBetween('till_date', [$request->from_date, $request->till_date])
-                    ->orWhere(function ($query) use ($request) {
-                        $query->where('from_date', '<=', $request->from_date)
-                            ->where('till_date', '>=', $request->till_date);
-                    });
-            })
-            ->exists();
+        $conflictingBookings = $this->bookingRepository->checkConflictingBookings($data);
 
         if ($conflictingBookings) {
             return response()->json(['message' => 'Room is already booked for the selected dates'], 400);
         }
 
-
-        $booking = Booking::create([
+        $booking = $this->bookingRepository->createBooking([
             'user_id' => auth()->id(),
             'room_id' => $request->room_id,
             'num_person' => $request->num_person,
@@ -61,7 +56,7 @@ class BookingController extends Controller
 
     public function cancelBooking($bookingId)
     {
-        $booking = Booking::find($bookingId);
+        $booking = $this->bookingRepository->findBookingById($bookingId);
 
         if (!$booking) {
             return response()->json(['message' => 'Booking not found'], 404);
@@ -71,9 +66,7 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking is already canceled'], 400);
         }
 
-        $booking->canceled = true;
-        $booking->save();
-
-        return response()->json(['message' => 'Booking canceled successfully', 'booking' => $booking], 200);
+        $updatedBooking = $this->bookingRepository->cancelBooking($booking);
+        return response()->json(['message' => 'Booking canceled successfully', 'booking' => $updatedBooking], 200);
     }
 }

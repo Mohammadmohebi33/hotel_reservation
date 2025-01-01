@@ -3,19 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHotelRequest;
-use App\Models\Hotel;
+use App\Repositories\HotelRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class HotelController extends Controller
 {
 
+    protected $hotelRepository;
+
+
+    public function __construct(HotelRepositoryInterface $hotelRepository)
+    {
+        $this->hotelRepository = $hotelRepository;
+    }
+
+
     public function index(){
-        return Hotel::all();
+        $hotels = $this->hotelRepository->getAllHotels();
+        return response()->json($hotels, 200);
     }
 
     public function store(StoreHotelRequest $request)
     {
-        $hotel = auth()->user()->hotels()->create($request->validated());
+        $hotel = $this->hotelRepository->createHotel($request->validated());
         return response()->json(['message' => 'Hotel created successfully', 'hotel' => $hotel], 201);
     }
 
@@ -23,21 +33,21 @@ class HotelController extends Controller
     public function getHotelById($id)
     {
         try {
-            $hotel = Hotel::with('user')->findOrFail($id);
-            return response()->json(['hotel' => $hotel,],200);
+            $hotel = $this->hotelRepository->getHotelById($id);
+            return response()->json(['hotel' => $hotel], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Hotel not found',], 404);
+            return response()->json(['message' => 'Hotel not found'], 404);
         }
     }
 
 
     public function getAllRoomsByHotelId($hotelID)
     {
-        $hotel = Hotel::with('rooms')->findOrFail($hotelID);
-
-        return response()->json([
-            'hotel' => $hotel->only(['id', 'name', 'location', 'rating']),
-            'rooms' => $hotel->rooms,
-        ], 200);
+        try {
+            $data = $this->hotelRepository->getAllRoomsByHotelId($hotelID);
+            return response()->json($data, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Hotel not found'], 404);
+        }
     }
 }

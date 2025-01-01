@@ -4,13 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRoomRequest;
 use App\Models\Hotel;
-use App\Models\Room;
+use App\Repositories\RoomRepositoryInterface;
 
 class RoomController extends Controller
 {
+
+    protected $roomRepository;
+
+    public function __construct(RoomRepositoryInterface $roomRepository)
+    {
+        $this->roomRepository = $roomRepository;
+    }
+
+
     public function index()
     {
-        return Room::all();
+        $rooms = $this->roomRepository->getAllRooms();
+        return response()->json($rooms, 200);
     }
 
 
@@ -20,14 +30,19 @@ class RoomController extends Controller
         if (!$hotel) {
             return response()->json(['message' => 'Hotel not found'], 404);
         }
-        $room = Room::create($request->validated());
+
+        $room = $this->roomRepository->createRoom($request->validated());
         return response()->json(['message' => 'Room created successfully', 'room' => $room], 201);
     }
 
 
     public function getRoomById($hotelId)
     {
-      $room = Room::query()->find($hotelId);
-      return response()->json(["room" => $room] , 200);
+        $room = $this->roomRepository->getRoomById($hotelId);
+
+        if (!$room) {
+            return response()->json(['message' => 'Room not found'], 404);
+        }
+        return response()->json(['room' => $room], 200);
     }
 }
