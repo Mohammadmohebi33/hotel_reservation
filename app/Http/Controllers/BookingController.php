@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 
@@ -25,14 +26,8 @@ class BookingController extends Controller
     }
 
 
-    public function storeBooking(Request $request)
+    public function storeBooking(StoreBookingRequest $request)
     {
-        $request->validate([
-            'room_id' => 'required|exists:rooms,id',
-            'num_person' => 'required|integer|min:1',
-            'from_date' => 'required|date|after_or_equal:today',
-            'till_date' => 'required|date|after:from_date',
-        ]);
 
         $conflictingBookings = Booking::where('room_id', $request->room_id)
             ->where('canceled', false)
@@ -67,11 +62,6 @@ class BookingController extends Controller
     public function cancelBooking($bookingId)
     {
         $booking = Booking::find($bookingId);
-
-
-        if ($booking->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
 
         if (!$booking) {
             return response()->json(['message' => 'Booking not found'], 404);
