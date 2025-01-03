@@ -9,4 +9,5 @@ interface HotelRepositoryInterface
     public function createHotel(array $data);
     public function getHotelById($id);
     public function getAllRoomsByHotelId($hotelID);
+    public function findHotelByID($id);
 }

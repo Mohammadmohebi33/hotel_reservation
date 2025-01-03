@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\RoomController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,17 +24,17 @@ Route::middleware('auth:api')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
 });
 
-Route::prefix("/hotel")->middleware("auth:api")->group(function (){
+Route::prefix("/hotel")->group(function (){
     Route::get("/all" , [HotelController::class,  "index"]);
-    Route::post("/store" , [HotelController::class , "store"]);
+    Route::post("/store" , [HotelController::class , "store"])->middleware("auth:api");
     Route::get("/{id}" , [HotelController::class, "getHotelById"]);
     Route::get("/{id}/rooms" , [HotelController::class , "getAllRoomsByHotelId"]);
 });
 
 
-Route::prefix('rooms')->middleware("auth:api")->group(function () {
+Route::prefix('rooms')->group(function () {
     Route::get("/all" , [RoomController::class , "index"]);
-    Route::post('/store', [RoomController::class, 'storeRoom']);
+    Route::post('/store', [RoomController::class, 'storeRoom'])->middleware("auth:api");
     Route::get('/{id}', [RoomController::class, 'getRoomById']);
 });
 

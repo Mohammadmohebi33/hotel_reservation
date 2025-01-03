@@ -8,7 +8,7 @@ class HotelRepository implements HotelRepositoryInterface
 {
     public function getAllHotels()
     {
-        return Hotel::all();
+        return Hotel::query()->paginate(10);
     }
 
     public function createHotel(array $data)
@@ -24,11 +24,11 @@ class HotelRepository implements HotelRepositoryInterface
     public function getAllRoomsByHotelId($hotelID)
     {
         $hotel = Hotel::with('rooms')->findOrFail($hotelID);
+        return $hotel->rooms;
+    }
 
-        return [
-            'hotel' => $hotel->only(['id', 'name', 'location', 'rating']),
-            'rooms' => $hotel->rooms,
-        ];
+    public function findHotelByID($id){
+        return Hotel::query()->find($id);
     }
 
 }

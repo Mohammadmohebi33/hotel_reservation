@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHotelRequest;
+use App\Http\Resources\HotelResource;
+use App\Http\Resources\RoomResource;
 use App\Repositories\HotelRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -20,13 +22,13 @@ class HotelController extends Controller
 
     public function index(){
         $hotels = $this->hotelRepository->getAllHotels();
-        return response()->json($hotels, 200);
+        return HotelResource::collection($hotels);
     }
 
     public function store(StoreHotelRequest $request)
     {
         $hotel = $this->hotelRepository->createHotel($request->validated());
-        return response()->json(['message' => 'Hotel created successfully', 'hotel' => $hotel], 201);
+        return response()->json(['message' => 'Hotel created successfully', 'hotel' => new HotelResource($hotel)], 201);
     }
 
 
@@ -34,7 +36,7 @@ class HotelController extends Controller
     {
         try {
             $hotel = $this->hotelRepository->getHotelById($id);
-            return response()->json(['hotel' => $hotel], 200);
+            return response()->json(['hotel' => new HotelResource($hotel)], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Hotel not found'], 404);
         }
@@ -44,8 +46,8 @@ class HotelController extends Controller
     public function getAllRoomsByHotelId($hotelID)
     {
         try {
-            $data = $this->hotelRepository->getAllRoomsByHotelId($hotelID);
-            return response()->json($data, 200);
+            $rooms = $this->hotelRepository->getAllRoomsByHotelId($hotelID);
+            return RoomResource::collection($rooms);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Hotel not found'], 404);
         }
