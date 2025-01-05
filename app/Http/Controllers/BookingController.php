@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBookingRequest;
+use App\Jobs\SendBookingConfirmationEmail;
+use App\Mail\BookingConfirmedMail;
 use App\Repositories\BookingRepositoryInterface;
+use Illuminate\Support\Facades\Mail;
 
 class BookingController extends Controller
 {
@@ -50,6 +53,9 @@ class BookingController extends Controller
             'canceled' => false,
         ]);
 
+
+        $email = auth()->user()->email;
+        dispatch(new SendBookingConfirmationEmail($email, $booking->toArray()));
         return response()->json(['message' => 'Room booked successfully', 'booking' => $booking], 201);
     }
 
